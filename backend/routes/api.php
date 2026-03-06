@@ -38,6 +38,14 @@ class ApiRouter
         if (($this->segments[0] ?? '') === 'api') {
             array_shift($this->segments);
             $this->uri = implode('/', $this->segments);
+            $this->segments = explode('/', $this->uri);
+        }
+
+        // Remover "index.php" se for o primeiro segmento (resiliência)
+        if (($this->segments[0] ?? '') === 'index.php') {
+            array_shift($this->segments);
+            $this->uri = implode('/', $this->segments);
+            $this->segments = explode('/', $this->uri);
         }
 
         $this->method = $_SERVER['REQUEST_METHOD'];
