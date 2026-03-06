@@ -1,0 +1,27 @@
+# =============================================================================
+# CALIPE DIGITAL — Apache URL Rewriting
+# Arquivo: backend/.htaccess
+# Descrição: Redireciona todas as requisições para index.php (Front Controller)
+#            mantendo os query params intactos.
+# =============================================================================
+
+Options -Indexes
+Options -MultiViews
+
+RewriteEngine On
+
+# Bloqueia acesso directo à pasta uploads (apenas servir estáticos)
+RewriteRule ^uploads/(.*)$ uploads/$1 [L]
+
+# Permite acesso a ficheiros e pastas reais (ex: uploads/)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Todo o resto passa por index.php
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Segurança: bloqueia acesso a ficheiros sensíveis
+<FilesMatch "\.(env|sql|json|lock|md)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>

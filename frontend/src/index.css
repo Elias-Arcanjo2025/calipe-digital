@@ -1,0 +1,186 @@
+/* =============================================================================
+   CALIPE DIGITAL — Estilos Globais
+   Arquivo: frontend/src/index.css
+   Paleta: Folhas de Eucalipto 🌿
+   ============================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Reset & Base ──────────────────────────────────────────────────────────── */
+@layer base {
+  :root {
+    /* Variáveis CSS — mapeiam a paleta eucalipto */
+    --color-primary:       #4f8c61;
+    --color-primary-dark:  #315a40;
+    --color-primary-light: #c3dccb;
+    --color-bark:          #a8844f;
+    --color-surface:       #f2f7f4;
+    --color-border:        #dde1dd;
+    --radius:              0.875rem;
+    --shadow-leaf:         0 4px 24px -4px rgba(79, 140, 97, 0.25);
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    @apply scroll-smooth;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  body {
+    @apply bg-eucalyptus-50 text-silver-900 font-sans antialiased;
+    line-height: 1.6;
+  }
+
+  /* Seleção de texto com cor eucalipto */
+  ::selection {
+    @apply bg-eucalyptus-200 text-eucalyptus-900;
+  }
+
+  /* Barra de rolagem minimalista */
+  ::-webkit-scrollbar        { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track  { @apply bg-transparent; }
+  ::-webkit-scrollbar-thumb  { @apply bg-eucalyptus-300 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-eucalyptus-400; }
+}
+
+/* ── Componentes Reutilizáveis ─────────────────────────────────────────────── */
+@layer components {
+
+  /* ── Botões ── */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2
+           bg-eucalyptus-500 hover:bg-eucalyptus-600 active:bg-eucalyptus-700
+           text-white font-semibold text-sm
+           px-5 py-2.5 rounded-xl
+           shadow-leaf hover:shadow-glow
+           transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-eucalyptus-400 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2
+           bg-white hover:bg-eucalyptus-50 active:bg-eucalyptus-100
+           text-eucalyptus-700 font-semibold text-sm
+           border border-eucalyptus-200 hover:border-eucalyptus-400
+           px-5 py-2.5 rounded-xl
+           transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-eucalyptus-300 focus:ring-offset-2;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2
+           hover:bg-eucalyptus-50 active:bg-eucalyptus-100
+           text-silver-600 hover:text-eucalyptus-700 font-medium text-sm
+           px-4 py-2 rounded-lg
+           transition-all duration-200;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2
+           bg-red-500 hover:bg-red-600
+           text-white font-semibold text-sm
+           px-5 py-2.5 rounded-xl
+           transition-all duration-200;
+  }
+
+  /* ── Cards ── */
+  .card {
+    @apply bg-white rounded-2xl border border-eucalyptus-100 shadow-glass
+           transition-all duration-300;
+  }
+
+  .card-hover {
+    @apply card hover:shadow-leaf hover:-translate-y-1 cursor-pointer;
+  }
+
+  /* ── Inputs ── */
+  .input {
+    @apply w-full px-4 py-2.5
+           bg-white border border-silver-200 rounded-xl
+           text-silver-900 placeholder-silver-400 text-sm
+           transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-eucalyptus-400 focus:border-eucalyptus-400
+           disabled:bg-eucalyptus-50 disabled:cursor-not-allowed;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-silver-700 mb-1.5;
+  }
+
+  /* ── Badges de Status ── */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .badge-pending    { @apply badge bg-amber-100   text-amber-700; }
+  .badge-paid       { @apply badge bg-blue-100    text-blue-700; }
+  .badge-shipped    { @apply badge bg-purple-100  text-purple-700; }
+  .badge-delivered  { @apply badge bg-eucalyptus-100 text-eucalyptus-700; }
+  .badge-cancelled  { @apply badge bg-red-100     text-red-700; }
+  .badge-processing { @apply badge bg-orange-100  text-orange-700; }
+
+  /* ── Página ── */
+  .page-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* ── Skeleton Loader ── */
+  .skeleton {
+    @apply bg-gradient-to-r from-silver-100 via-silver-50 to-silver-100
+           animate-pulse rounded-xl;
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* ── Section Header ── */
+  .section-header {
+    @apply flex items-center gap-3 mb-6;
+  }
+  .section-header::before {
+    content: '';
+    @apply block w-1 h-6 bg-eucalyptus-500 rounded-full;
+  }
+}
+
+/* ── Utilitários ───────────────────────────────────────────────────────────── */
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-leaf-gradient;
+  }
+
+  .glass {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    @apply bg-white/80 border border-white/60;
+  }
+
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+/* ── Animações ─────────────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in  { animation: fadeIn  0.3s ease-out both; }
+.animate-slide-up { animation: slideUp 0.4s ease-out both; }
