@@ -1,6 +1,7 @@
 -- ============================================================
---  CALIPE DIGITAL — Esquema do Banco de Dados
---  Versão: 1.0 | Data: 2026-03-06
+--  CALIPE DIGITAL — Database Schema (Fixed for Controllers)
+--  Version: 1.1 | Date: 2026-03-06
+--  Description: Updated to match English-named controllers.
 -- ============================================================
 
 CREATE DATABASE IF NOT EXISTS calipe_digital
@@ -9,139 +10,119 @@ CREATE DATABASE IF NOT EXISTS calipe_digital
 
 USE calipe_digital;
 
-CREATE TABLE IF NOT EXISTS usuarios (
+-- ── USERS ────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS users (
   id            INT AUTO_INCREMENT PRIMARY KEY,
-  nome          VARCHAR(100)            NOT NULL,
+  name          VARCHAR(100)            NOT NULL,
   email         VARCHAR(150)            NOT NULL UNIQUE,
-  senha_hash    VARCHAR(255)            NOT NULL,
-  role          ENUM('cliente','admin') NOT NULL DEFAULT 'cliente',
-  telefone      VARCHAR(20),
-  criado_em     DATETIME                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  atualizado_em DATETIME                NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  password      VARCHAR(255)            NOT NULL,
+  role          ENUM('customer','admin') NOT NULL DEFAULT 'customer',
+  avatar        VARCHAR(100)            DEFAULT NULL,
+  phone         VARCHAR(20)             DEFAULT NULL,
+  created_at    DATETIME                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at    DATETIME                NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_email (email),
   INDEX idx_role  (role)
 ) ENGINE=InnoDB;
 
-CREATE TABLE IF NOT EXISTS enderecos (
+-- ── CATEGORIES ───────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS categories (
   id          INT AUTO_INCREMENT PRIMARY KEY,
-  usuario_id  INT          NOT NULL,
-  label       VARCHAR(50)  NOT NULL DEFAULT 'Casa',
-  rua         VARCHAR(200) NOT NULL,
-  numero      VARCHAR(20)  NOT NULL,
-  complemento VARCHAR(100),
-  bairro      VARCHAR(100) NOT NULL,
-  cidade      VARCHAR(100) NOT NULL,
-  estado      CHAR(2)      NOT NULL,
-  cep         VARCHAR(10)  NOT NULL,
-  principal   TINYINT(1)   NOT NULL DEFAULT 0,
-  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-  INDEX idx_usuario (usuario_id)
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS categorias (
-  id        INT AUTO_INCREMENT PRIMARY KEY,
-  nome      VARCHAR(100) NOT NULL,
-  slug      VARCHAR(120) NOT NULL UNIQUE,
-  descricao TEXT,
-  pai_id    INT          NULL,
-  icone     VARCHAR(80),
-  ativo     TINYINT(1)   NOT NULL DEFAULT 1,
-  FOREIGN KEY (pai_id) REFERENCES categorias(id) ON DELETE SET NULL,
+  name        VARCHAR(100) NOT NULL,
+  slug        VARCHAR(120) NOT NULL UNIQUE,
+  description TEXT,
+  image       VARCHAR(255) DEFAULT NULL,
+  active      TINYINT(1)   NOT NULL DEFAULT 1,
   INDEX idx_slug (slug)
 ) ENGINE=InnoDB;
 
-CREATE TABLE IF NOT EXISTS produtos (
-  id                INT AUTO_INCREMENT PRIMARY KEY,
-  categoria_id      INT             NULL,
-  nome              VARCHAR(200)    NOT NULL,
-  slug              VARCHAR(220)    NOT NULL UNIQUE,
-  descricao         TEXT,
-  preco             DECIMAL(10,2)   NOT NULL,
-  preco_promocional DECIMAL(10,2)   NULL,
-  estoque           INT             NOT NULL DEFAULT 0,
-  sku               VARCHAR(80)     UNIQUE,
-  imagem_principal  VARCHAR(255),
-  ativo             TINYINT(1)      NOT NULL DEFAULT 1,
-  destaque          TINYINT(1)      NOT NULL DEFAULT 0,
-  criado_em         DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  atualizado_em     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (categoria_id) REFERENCES categorias(id) ON DELETE SET NULL,
+-- ── PRODUCTS ─────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS products (
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  category_id   INT             NULL,
+  name          VARCHAR(200)    NOT NULL,
+  slug          VARCHAR(220)    NOT NULL UNIQUE,
+  description   TEXT,
+  price         DECIMAL(10,2)   NOT NULL,
+  sale_price    DECIMAL(10,2)   NULL,
+  stock         INT             NOT NULL DEFAULT 0,
+  sku           VARCHAR(80)     UNIQUE,
+  image         VARCHAR(255)    DEFAULT NULL,
+  images        JSON            DEFAULT NULL,
+  featured      TINYINT(1)      NOT NULL DEFAULT 0,
+  active        TINYINT(1)      NOT NULL DEFAULT 1,
+  views         INT             DEFAULT 0,
+  created_at    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
   INDEX idx_slug      (slug),
-  INDEX idx_categoria (categoria_id),
-  INDEX idx_ativo     (ativo),
-  FULLTEXT INDEX idx_busca (nome, descricao)
+  INDEX idx_category  (category_id),
+  INDEX idx_active    (active),
+  FULLTEXT INDEX idx_search (name, description)
 ) ENGINE=InnoDB;
 
-CREATE TABLE IF NOT EXISTS produto_imagens (
-  id         INT AUTO_INCREMENT PRIMARY KEY,
-  produto_id INT          NOT NULL,
-  url        VARCHAR(255) NOT NULL,
-  alt        VARCHAR(200),
-  ordem      INT          NOT NULL DEFAULT 0,
-  FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE,
-  INDEX idx_produto (produto_id)
+-- ── ORDERS ───────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS orders (
+  id              INT AUTO_INCREMENT PRIMARY KEY,
+  user_id         INT            NOT NULL,
+  status          ENUM('pending','paid','processing','shipped','delivered','cancelled') NOT NULL DEFAULT 'pending',
+  subtotal        DECIMAL(10,2)  NOT NULL,
+  shipping_cost   DECIMAL(10,2)  NOT NULL DEFAULT 0.00,
+  total           DECIMAL(10,2)  NOT NULL,
+  payment_method  VARCHAR(60)    DEFAULT 'pix',
+  address_json    JSON           NOT NULL,
+  created_at      DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at      DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT,
+  INDEX idx_user   (user_id),
+  INDEX idx_status (status)
 ) ENGINE=InnoDB;
 
-CREATE TABLE IF NOT EXISTS pedidos (
-  id               INT AUTO_INCREMENT PRIMARY KEY,
-  usuario_id       INT            NOT NULL,
-  endereco_id      INT            NULL,
-  status           ENUM('pendente','pago','preparando','enviado','entregue','cancelado') NOT NULL DEFAULT 'pendente',
-  total            DECIMAL(10,2)  NOT NULL,
-  frete            DECIMAL(10,2)  NOT NULL DEFAULT 0.00,
-  metodo_pagamento VARCHAR(60),
-  observacao       TEXT,
-  criado_em        DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  atualizado_em    DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (usuario_id)  REFERENCES usuarios(id)  ON DELETE RESTRICT,
-  FOREIGN KEY (endereco_id) REFERENCES enderecos(id) ON DELETE SET NULL,
-  INDEX idx_usuario (usuario_id),
-  INDEX idx_status  (status)
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS pedido_itens (
+-- ── ORDER ITEMS ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS order_items (
   id           INT AUTO_INCREMENT PRIMARY KEY,
-  pedido_id    INT           NOT NULL,
-  produto_id   INT           NOT NULL,
-  nome_produto VARCHAR(200)  NOT NULL,
-  quantidade   INT           NOT NULL,
-  preco_unit   DECIMAL(10,2) NOT NULL,
-  subtotal     DECIMAL(10,2) NOT NULL,
-  FOREIGN KEY (pedido_id)  REFERENCES pedidos(id)  ON DELETE CASCADE,
-  FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE RESTRICT,
-  INDEX idx_pedido  (pedido_id)
+  order_id     INT           NOT NULL,
+  product_id   INT           NOT NULL,
+  quantity     INT           NOT NULL,
+  unit_price   DECIMAL(10,2) NOT NULL,
+  total        DECIMAL(10,2) NOT NULL,
+  FOREIGN KEY (order_id)   REFERENCES orders(id)   ON DELETE CASCADE,
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT,
+  INDEX idx_order (order_id)
 ) ENGINE=InnoDB;
 
+-- ── REVIEWS ──────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS reviews (
   id         INT        AUTO_INCREMENT PRIMARY KEY,
-  produto_id INT        NOT NULL,
-  usuario_id INT        NOT NULL,
-  nota       TINYINT    NOT NULL,
-  titulo     VARCHAR(150),
-  comentario TEXT,
-  aprovado   TINYINT(1) NOT NULL DEFAULT 0,
-  criado_em  DATETIME   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE,
-  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-  UNIQUE KEY uq_review (produto_id, usuario_id)
+  product_id INT        NOT NULL,
+  user_id    INT        NOT NULL,
+  rating     TINYINT    NOT NULL,
+  title      VARCHAR(150),
+  comment    TEXT,
+  approved   TINYINT(1) NOT NULL DEFAULT 0,
+  created_at DATETIME   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id)    REFERENCES users(id)    ON DELETE CASCADE,
+  UNIQUE KEY uq_review (product_id, user_id)
 ) ENGINE=InnoDB;
 
 -- ============================================================
---  SEEDS — Dados Iniciais
---  Admin: admin@calipe.ao | senha: Admin@2026
+--  SEEDS (Initial Data)
 -- ============================================================
-INSERT INTO usuarios (nome, email, senha_hash, role) VALUES
+
+-- Admin: admin@calipe.ao | password: Admin@2026
+INSERT INTO users (name, email, password, role) VALUES
 ('Admin Calipe', 'admin@calipe.ao',
  '$2y$12$YQr5eN.T6s5BOQlT3dKYme.FwROdHe/2PxmKijbDHqwgWrN/ZoNGa', 'admin');
 
-INSERT INTO categorias (nome, slug, descricao) VALUES
+INSERT INTO categories (name, slug, description) VALUES
 ('Electrónica',    'electronica',  'Smartphones, tablets e gadgets'),
 ('Moda',           'moda',         'Roupas, calçados e acessórios'),
 ('Casa & Deco',    'casa-deco',    'Decoração, utensílios e móveis'),
 ('Beleza & Saúde', 'beleza-saude', 'Cosméticos e cuidados pessoais'),
 ('Desporto',       'desporto',     'Equipamento desportivo');
 
-INSERT INTO produtos (categoria_id, nome, slug, descricao, preco, preco_promocional, estoque, sku, ativo, destaque) VALUES
+INSERT INTO products (category_id, name, slug, description, price, sale_price, stock, sku, active, featured) VALUES
 (1, 'Smartphone X Pro 128GB',    'smartphone-x-pro',        'Ecran AMOLED 6.7", 108MP, 5000mAh',        85000.00, 79000.00, 15, 'EL-001', 1, 1),
 (1, 'Auriculares Bluetooth Pro', 'auriculares-bt-pro',      'ANC, 30h autonomia, carga rápida',          12500.00, NULL,     40, 'EL-002', 1, 0),
 (2, 'Camisa Linho Premium',      'camisa-linho-premium',    '100% linho natural, slim fit',               4500.00, 3800.00,  60, 'MD-001', 1, 1),

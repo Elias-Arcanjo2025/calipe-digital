@@ -8,34 +8,38 @@
 
 require_once __DIR__ . '/../config/database.php';
 
-abstract class BaseController {
+abstract class BaseController
+{
     /** Instância PDO compartilhada */
     protected PDO $db;
 
-    public function __construct() {
-        $this->db = Database::getInstance();
+    public function __construct()
+    {
+        $this->db = Database::getConnection();
     }
 
     // ── Respostas Padronizadas ─────────────────────────────────────────────────
 
     /** Resposta de sucesso (2xx) */
-    protected function success(mixed $data = null, string $message = 'Operação realizada com sucesso.', int $code = 200): never {
+    protected function success(mixed $data = null, string $message = 'Operação realizada com sucesso.', int $code = 200): never
+    {
         http_response_code($code);
         echo json_encode([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => $message,
-            'data'    => $data,
+            'data' => $data,
         ]);
         exit;
     }
 
     /** Resposta de erro (4xx / 5xx) */
-    protected function error(string $message, int $code = 400, mixed $data = null): never {
+    protected function error(string $message, int $code = 400, mixed $data = null): never
+    {
         http_response_code($code);
         echo json_encode([
-            'status'  => 'error',
+            'status' => 'error',
             'message' => $message,
-            'data'    => $data,
+            'data' => $data,
         ]);
         exit;
     }
@@ -46,7 +50,8 @@ abstract class BaseController {
      * Lê e decodifica o corpo da requisição JSON.
      * @return array Dados do body ou array vazio
      */
-    protected function getBody(): array {
+    protected function getBody(): array
+    {
         $raw = file_get_contents('php://input');
         return json_decode($raw, true) ?? [];
     }
@@ -56,7 +61,8 @@ abstract class BaseController {
      * @param array $data   Dados recebidos
      * @param array $fields Campos obrigatórios
      */
-    protected function requireFields(array $data, array $fields): void {
+    protected function requireFields(array $data, array $fields): void
+    {
         foreach ($fields as $field) {
             if (empty($data[$field])) {
                 $this->error("O campo '{$field}' é obrigatório.", 422);
@@ -74,9 +80,10 @@ abstract class BaseController {
      * @param string $prefix  Prefixo do nome de arquivo gerado
      * @return string Nome do arquivo salvo
      */
-    protected function uploadImage(array $file, string $prefix = 'img'): string {
-        $allowed   = ['image/jpeg', 'image/png', 'image/webp'];
-        $maxSize   = 5 * 1024 * 1024; // 5 MB
+    protected function uploadImage(array $file, string $prefix = 'img'): string
+    {
+        $allowed = ['image/jpeg', 'image/png', 'image/webp'];
+        $maxSize = 5 * 1024 * 1024; // 5 MB
 
         if ($file['error'] !== UPLOAD_ERR_OK) {
             $this->error('Erro no upload da imagem.', 422);
@@ -88,9 +95,9 @@ abstract class BaseController {
             $this->error('Imagem muito grande. Limite: 5 MB.', 422);
         }
 
-        $ext      = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
         $filename = $prefix . '_' . uniqid() . '.' . strtolower($ext);
-        $dest     = UPLOADS_PATH . $filename;
+        $dest = UPLOADS_PATH . $filename;
 
         if (!move_uploaded_file($file['tmp_name'], $dest)) {
             $this->error('Não foi possível salvar a imagem.', 500);
@@ -102,20 +109,22 @@ abstract class BaseController {
     // ── Paginação ─────────────────────────────────────────────────────────────
 
     /** Retorna [limit, offset] baseado nos query params ?page=&per_page= */
-    protected function getPagination(): array {
-        $page    = max(1, (int)($_GET['page']     ?? 1));
+    protected function getPagination(): array
+    {
+        $page = max(1, (int)($_GET['page'] ?? 1));
         $perPage = min(100, max(1, (int)($_GET['per_page'] ?? 20)));
-        $offset  = ($page - 1) * $perPage;
+        $offset = ($page - 1) * $perPage;
         return [$perPage, $offset, $page];
     }
 
     /** Gera o bloco de meta-dados de paginação */
-    protected function paginationMeta(int $total, int $perPage, int $page): array {
+    protected function paginationMeta(int $total, int $perPage, int $page): array
+    {
         return [
-            'total'        => $total,
-            'per_page'     => $perPage,
+            'total' => $total,
+            'per_page' => $perPage,
             'current_page' => $page,
-            'last_page'    => (int)ceil($total / $perPage),
+            'last_page' => (int)ceil($total / $perPage),
         ];
     }
 }
