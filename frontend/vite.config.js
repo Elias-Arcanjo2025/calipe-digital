@@ -14,11 +14,11 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    // Proxy — redireciona /api para o backend PHP em XAMPP
     proxy: {
       '/api': {
         target: 'http://localhost/calipe-digital/backend',
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
         secure: false,
       },
     },
